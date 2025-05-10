@@ -16,4 +16,12 @@ app.use(express.static("public"));  // Serves static files like images, CSS, and
 app.use(cookieParser());  // Parses cookies attached to the client request object
 
 
+// Import routes
+import userRouter from './routes/user.routes.js';
+
+
+// routes declaration
+app.use("/api/v1/users", userRouter);  // All user-related routes will be prefixed with "/api/v1/users"
+// http://localhost:5000/api/v1/users/register --> done where we declare the routes in user.routes.js
+
 export { app };
