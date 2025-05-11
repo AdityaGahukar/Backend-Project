@@ -22,6 +22,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const { fullName, username, email, password } = req.body;
     console.log("email: ", email);
+    console.log(req.body);
+    console.log(req.files);
 
     // validate user details together using some() function
     if (
@@ -48,9 +50,13 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // avatar is at our local server: (Check of avatar is present)
     const avatarLocalPath = req.files?.avatar[0]?.path; // path by multer
-    const coverImageLocalPath = req.files?.coverImage[0]?.path; // path by multer
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path; // path by multer
+    }
+    
     console.log("avatarLocalPath: ", avatarLocalPath);
-
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar is required");
     }
