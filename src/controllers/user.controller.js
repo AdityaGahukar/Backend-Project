@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -337,6 +337,10 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
         throw new ApiError(500, "Failed to upload avatar");
     }
 
+    // for deleting the old avatar from cloudinary
+    const currentUser = await User.findById(req.user._id);   // Fetch current user to get previous avatar (before update)
+    const oldAvatarPublicId = currentUser?.avatar?.split("/").pop().split(".")[0]; // get the public id of the old avatar
+
     // update user avatar in the database
     const user = await User.findByIdAndUpdate(
         req.user._id,
@@ -347,6 +351,14 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
         },
         { new: true } // returns the updated user
     ).select("-password")
+
+    // delete the old avatar from cloudinary
+    if (oldAvatarPublicId) {
+        const deleteResult = await deleteFromCloudinary(oldAvatarPublicId);
+        if (!deleteResult) {
+            throw new ApiError(500, "Failed to delete old avatar");
+        }
+    }
 
     return res
         .status(200)
@@ -368,6 +380,10 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
         throw new ApiError(500, "Failed to upload cover image");
     }
 
+    // for deleting the old cover image from cloudinary
+    const currentUser = await User.findById(req.user._id);   // Fetch current user to get previous cover image (before update)
+    const oldCoverImagePublicId = currentUser?.coverImage?.split("/").pop().split(".")[0]; // get the public id of the old cover image
+
     // update user cover image in the database
     const user = await User.findByIdAndUpdate(
         req.user._id,
@@ -378,6 +394,14 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
         },
         { new: true } // returns the updated user
     ).select("-password")
+
+    // delete the old cover image from cloudinary
+    if (oldCoverImagePublicId) {
+        const deleteResult = await deleteFromCloudinary(oldCoverImagePublicId);
+        if (!deleteResult) {
+            throw new ApiError(500, "Failed to delete old cover image");
+        }
+    }
 
     return res
         .status(200)
