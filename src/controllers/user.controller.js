@@ -7,6 +7,7 @@ import {
 } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -190,7 +191,10 @@ const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: { refreshToken: undefined },
+            // $set: { refreshToken: undefined },
+            $unset: {
+                refreshToken: 1, // remove the refresh token from the database
+            }
         },
         {
             new: true,
@@ -305,8 +309,8 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async (req, res) => {
     const { fullName, email } = req.body;
 
-    if (!fullName || !email) {
-        throw new ApiError(400, "Full name and email are required");
+    if (!fullName && !email) {
+        throw new ApiError(400, "Full name or email are required");
     }
 
     const user = await User.findByIdAndUpdate(
@@ -491,7 +495,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: mongoose.Types.ObjectId.createFromHexString(req.user._id),
+                _id: new mongoose.Types.ObjectId(req.user._id),
             },
         },
         {
